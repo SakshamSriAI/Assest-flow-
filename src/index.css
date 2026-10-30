@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+@theme {
+  --font-heading: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --color-offwhite: #F8F9FA;
+  --color-purewhite: #FFFFFF;
+  --color-lightgray: #F1F3F5;
+  --color-bordergray: #E2E8F0;
+  --color-darkcharcoal: #0F172A;
+  --color-mutedslate: #64748B;
+
+  --color-deepnavy: #0F2F57;
+  --color-cobalt: #2563EB;
+  --color-activeblue: #1D4ED8;
+  --color-selectiontint: #EFF6FF;
+
+  --color-mintgreen: #ECFDF5;
+  --color-calmblue: #EFF6FF;
+  --color-warningamber: #FFFBEB;
+  --color-alertred: #FEF2F2;
+  --color-slategray: #F1F5F9;
+
+  /* Overriding standard Tailwind palette tokens to match the design palette seamlessly */
+  --color-indigo-50: #EFF6FF;
+  --color-indigo-100: #DBEAFE;
+  --color-indigo-200: #BFDBFE;
+  --color-indigo-300: #93C5FD;
+  --color-indigo-400: #60A5FA;
+  --color-indigo-500: #3B82F6;
+  --color-indigo-600: #2563EB;
+  --color-indigo-700: #1D4ED8;
+  --color-indigo-800: #1E40AF;
+  --color-indigo-900: #0F2F57;
+  --color-indigo-950: #0A1B30;
+
+  --color-blue-50: #EFF6FF;
+  --color-blue-600: #2563EB;
+  --color-blue-700: #1D4ED8;
+
+  --color-slate-50: #F8F9FA;
+  --color-slate-100: #F1F3F5;
+  --color-slate-200: #E2E8F0;
+  --color-slate-500: #64748B;
+  --color-slate-900: #0F172A;
+
+  --color-emerald-50: #ECFDF5;
+  --color-amber-50: #FFFBEB;
+  --color-rose-50: #FEF2F2;
+
+  --color-sky-50: #EFF6FF;
+  --color-sky-100: #DBEAFE;
+  --color-sky-200: #BFDBFE;
+  --color-sky-600: #2563EB;
+  --color-sky-700: #1D4ED8;
+
+  --color-purple-50: #EFF6FF;
+  --color-purple-100: #E2E8F0;
+  --color-purple-200: #CBD5E1;
+  --color-purple-600: #0F2F57;
+  --color-purple-700: #0F2F57;
+  --color-purple-800: #0A1B30;
+  --color-purple-900: #0A1B30;
+}
+
+@layer base {
+  :root {
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-heading: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    color: #0F172A;
+    background-color: #F8F9FA;
+  }
+
+  h1, .page-title, .font-heading {
+    font-family: var(--font-heading);
+  }
+
+  code, kbd, samp, pre {
+    font-family: var(--font-mono);
+  }
+}
+
+.font-heading {
+  font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+/* Custom compact scrollbars for ERP high-density tables and sidebars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #E2E8F0;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #64748B;
+}

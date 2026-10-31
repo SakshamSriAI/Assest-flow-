@@ -21,6 +21,7 @@ import {
   ActivityLogItem,
   ToastMessage
 } from '../types'
+import { assetFlowApi } from '../api/assetFlowApi'
 
 const STORAGE_PREFIX = 'assetflow_erp_v2_'
 
@@ -1333,6 +1334,7 @@ interface AppContextType {
   updateAsset: (id: string, updates: Partial<Asset>) => void
   deleteAsset: (id: string) => void
   resetDatabase: () => void
+  clearDatabase: () => void
   // Toast notifications
   toasts: ToastMessage[]
   addToast: (message: string, type?: 'success' | 'info' | 'warning' | 'error', durationMs?: number) => void
@@ -1386,6 +1388,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => { saveStorage('auditCycles', auditCycles) }, [auditCycles])
   useEffect(() => { saveStorage('activityLogs', activityLogs) }, [activityLogs])
   useEffect(() => { saveStorage('notifications', notifications) }, [notifications])
+
+  // --- Python Flask Backend Initial Synchronizer ---
+  useEffect(() => {
+    assetFlowApi.isOnline().then((online) => {
+      if (online) {
+        assetFlowApi.getAssets().then((remoteAssets) => {
+          if (remoteAssets && remoteAssets.length > 0) {
+            setAssets(remoteAssets)
+          }
+        })
+        assetFlowApi.getTickets().then((remoteTickets) => {
+          if (remoteTickets && remoteTickets.length > 0) {
+            setTickets(remoteTickets)
+          }
+        })
+        assetFlowApi.getBookings().then((remoteBookings) => {
+          if (remoteBookings && remoteBookings.length > 0) {
+            setBookings(remoteBookings)
+          }
+        })
+        addToast('Connected to Python Flask SQLite backend (http://localhost:5001)', 'success', 3500)
+      }
+    })
+  }, [])
   const [currentRoute, setCurrentRouteState] = useState<AppRoute>('dashboard')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] = useState(false)
@@ -1487,7 +1513,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAuditCycles(INITIAL_AUDIT_CYCLES)
     setActivityLogs(INITIAL_ACTIVITY_LOGS)
     setNotifications(INITIAL_NOTIFICATIONS)
+    assetFlowApi.resetDatabase()
     addToast('Database reset to clean demo state', 'info')
+  }
+
+  const clearDatabase = async () => {
+    await assetFlowApi.clearDatabase()
+    setAssets([])
+    setTickets([])
+    setBookings([])
+    setTransfers([])
+    addToast('All demo records cleared — Clean zero-state database', 'info', 4000)
   }
 
   // --- Asset Management CRUD ---
@@ -1495,6 +1531,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAssets((prev) =>
       prev.map((a) => (a.id === id ? { ...a, ...updates } : a))
     )
+    assetFlowApi.updateAsset(id, updates)
     const target = assets.find((a) => a.id === id)
     addActivityLog({
       category: 'registration',
@@ -1514,6 +1551,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const deleteAsset = (id: string) => {
     const target = assets.find((a) => a.id === id)
     setAssets((prev) => prev.filter((a) => a.id !== id))
+    assetFlowApi.deleteAsset(id)
     addActivityLog({
       category: 'registration',
       action: 'Asset Decommissioned / Deleted',
@@ -1694,6 +1732,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     setAssets((prev) => [newAsset, ...prev])
+    assetFlowApi.createAsset(newAsset)
 
     setCategories((prev) =>
       prev.map((c) => (c.id === data.categoryId ? { ...c, assetCount: c.assetCount + 1 } : c))
@@ -2702,6 +2741,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateAsset,
         deleteAsset,
         resetDatabase,
+        clearDatabase,
         toasts,
         addToast,
         removeToast,

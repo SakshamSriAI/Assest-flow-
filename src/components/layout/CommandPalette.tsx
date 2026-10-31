@@ -15,7 +15,8 @@ import {
   RotateCcw,
   UserCheck,
   ShieldAlert,
-  ArrowRight
+  ArrowRight,
+  Trash2
 } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { AppRoute, Asset } from '../../types'
@@ -33,6 +34,7 @@ export const CommandPalette: React.FC = () => {
     setIsRoleSwitcherOpen,
     setDetailAsset,
     resetDatabase,
+    clearDatabase,
   } = useApp()
 
   const [query, setQuery] = useState('')
@@ -109,6 +111,12 @@ export const CommandPalette: React.FC = () => {
       category: 'Actions',
       icon: RotateCcw,
       action: () => resetDatabase(),
+    },
+    {
+      label: 'Clear All Records (Empty Zero-State Database)',
+      category: 'Actions',
+      icon: Trash2,
+      action: () => clearDatabase(),
     },
   ]
 

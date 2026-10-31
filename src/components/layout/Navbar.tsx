@@ -19,6 +19,7 @@ export const Navbar: React.FC = () => {
     setIsNotificationDrawerOpen,
     setIsRoleSwitcherOpen,
     setCurrentRoute,
+    setIsCommandPaletteOpen,
   } = useApp()
 
   return (
@@ -41,17 +42,17 @@ export const Navbar: React.FC = () => {
 
       {/* Center section: Global Quick Search */}
       <div className="hidden lg:flex items-center max-w-xs w-full mx-4">
-        <div className="relative w-full">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#64748B]" />
-          <input
-            type="text"
-            placeholder="Search assets (e.g. AF-0001, MacBook, Room A)..."
-            className="w-full bg-[#F8F9FA] border border-[#E2E8F0] rounded-lg pl-8 pr-12 py-1 text-xs text-[#0F172A] placeholder:text-[#64748B] focus:outline-none focus:border-[#2563EB] focus:bg-white transition-all"
-          />
-          <kbd className="absolute right-2 top-1/2 -translate-y-1/2 rounded border border-[#E2E8F0] bg-white px-1 text-[9px] font-mono text-[#64748B]">
+        <button
+          type="button"
+          onClick={() => setIsCommandPaletteOpen(true)}
+          className="relative w-full text-left bg-[#F8F9FA] hover:bg-white border border-[#E2E8F0] hover:border-[#2563EB] rounded-lg pl-8 pr-12 py-1.5 text-xs text-[#64748B] transition-all cursor-pointer shadow-2xs group"
+        >
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#64748B] group-hover:text-[#2563EB] transition-colors" />
+          <span className="truncate block">Search assets or press ⌘K...</span>
+          <kbd className="absolute right-2 top-1/2 -translate-y-1/2 rounded border border-[#E2E8F0] bg-white px-1 text-[9px] font-mono text-[#64748B] group-hover:text-[#2563EB]">
             ⌘K
           </kbd>
-        </div>
+        </button>
       </div>
 
       {/* Right section: Notifications & Profile */}

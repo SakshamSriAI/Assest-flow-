@@ -24,9 +24,6 @@ import { useApp } from '../../context/AppContext'
 import { Card, CardHeader, CardContent } from '../ui/Card'
 import { Badge, AssetStateBadge, RoleBadge, MaintenanceBadge, BookingBadge } from '../ui/Badge'
 import { Button } from '../ui/Button'
-import { RegisterAssetModal } from '../dashboard/RegisterAssetModal'
-import { BookResourceModal } from '../dashboard/BookResourceModal'
-import { RaiseMaintenanceModal } from '../dashboard/RaiseMaintenanceModal'
 import { CheckInReturnModal } from '../dashboard/CheckInReturnModal'
 import { Asset } from '../../types'
 
@@ -40,12 +37,12 @@ export const DashboardScreen: React.FC = () => {
     departments,
     setCurrentRoute,
     approveTransfer,
+    setIsRegisterAssetOpen,
+    setIsBookResourceOpen,
+    setIsRaiseMaintenanceOpen,
   } = useApp()
 
   // Modal control states
-  const [isRegisterOpen, setIsRegisterOpen] = useState(false)
-  const [isBookResourceOpen, setIsBookResourceOpen] = useState(false)
-  const [isRaiseMaintOpen, setIsRaiseMaintOpen] = useState(false)
   const [isCheckInOpen, setIsCheckInOpen] = useState(false)
   const [selectedAssetForReturn, setSelectedAssetForReturn] = useState<Asset | null>(null)
 
@@ -115,7 +112,7 @@ export const DashboardScreen: React.FC = () => {
           <Button
             variant="primary"
             size="sm"
-            onClick={() => setIsRegisterOpen(true)}
+            onClick={() => setIsRegisterAssetOpen(true)}
             leftIcon={<Plus className="w-4 h-4" />}
           >
             Register Asset
@@ -133,7 +130,7 @@ export const DashboardScreen: React.FC = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setIsRaiseMaintOpen(true)}
+            onClick={() => setIsRaiseMaintenanceOpen(true)}
             leftIcon={<Wrench className="w-4 h-4 text-[#B45309]" />}
           >
             Raise Ticket
@@ -552,7 +549,7 @@ export const DashboardScreen: React.FC = () => {
               <Button
                 variant="outline"
                 size="xs"
-                onClick={() => setIsRaiseMaintOpen(true)}
+                onClick={() => setIsRaiseMaintenanceOpen(true)}
                 leftIcon={<Plus className="w-3 h-3" />}
               >
                 Ticket
@@ -661,21 +658,6 @@ export const DashboardScreen: React.FC = () => {
       </Card>
 
       {/* CONTEXT MODALS */}
-      <RegisterAssetModal
-        isOpen={isRegisterOpen}
-        onClose={() => setIsRegisterOpen(false)}
-      />
-
-      <BookResourceModal
-        isOpen={isBookResourceOpen}
-        onClose={() => setIsBookResourceOpen(false)}
-      />
-
-      <RaiseMaintenanceModal
-        isOpen={isRaiseMaintOpen}
-        onClose={() => setIsRaiseMaintOpen(false)}
-      />
-
       <CheckInReturnModal
         isOpen={isCheckInOpen}
         onClose={() => setIsCheckInOpen(false)}

@@ -240,6 +240,12 @@ export interface NotificationItem {
   urgency?: 'high' | 'medium' | 'low'
 }
 
+export interface ToastMessage {
+  id: string
+  message: string
+  type: 'success' | 'info' | 'warning' | 'error'
+}
+
 export interface ActivityLogItem {
   id: string
   timestamp: string

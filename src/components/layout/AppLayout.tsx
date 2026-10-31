@@ -3,6 +3,12 @@ import { Sidebar } from './Sidebar'
 import { Navbar } from './Navbar'
 import { NotificationDrawer } from './NotificationDrawer'
 import { RoleSwitcherModal } from './RoleSwitcherModal'
+import { CommandPalette } from './CommandPalette'
+import { ToastContainer } from '../ui/ToastContainer'
+import { RegisterAssetModal } from '../dashboard/RegisterAssetModal'
+import { BookResourceModal } from '../dashboard/BookResourceModal'
+import { RaiseMaintenanceModal } from '../dashboard/RaiseMaintenanceModal'
+import { AssetDetailDrawer } from '../assets/AssetDetailDrawer'
 import { useApp } from '../../context/AppContext'
 
 interface AppLayoutProps {
@@ -10,7 +16,20 @@ interface AppLayoutProps {
 }
 
 export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
-  const { isRoleSwitcherOpen, setIsRoleSwitcherOpen } = useApp()
+  const {
+    isRoleSwitcherOpen,
+    setIsRoleSwitcherOpen,
+    toasts,
+    removeToast,
+    isRegisterAssetOpen,
+    setIsRegisterAssetOpen,
+    isBookResourceOpen,
+    setIsBookResourceOpen,
+    isRaiseMaintenanceOpen,
+    setIsRaiseMaintenanceOpen,
+    detailAsset,
+    setDetailAsset,
+  } = useApp()
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#F8F9FA] text-[#0F172A] antialiased">
@@ -30,12 +49,41 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         </main>
       </div>
 
-      {/* Global Overlays */}
+      {/* Global Overlays & Modals */}
       <NotificationDrawer />
       <RoleSwitcherModal
         isOpen={isRoleSwitcherOpen}
         onClose={() => setIsRoleSwitcherOpen(false)}
       />
+
+      {/* Global Interactive Command Palette (Cmd+K / Ctrl+K) */}
+      <CommandPalette />
+
+      {/* Global Toast Notification Center */}
+      <ToastContainer />
+
+      {/* Global Action Modals */}
+      <RegisterAssetModal
+        isOpen={isRegisterAssetOpen}
+        onClose={() => setIsRegisterAssetOpen(false)}
+      />
+      <BookResourceModal
+        isOpen={isBookResourceOpen}
+        onClose={() => setIsBookResourceOpen(false)}
+      />
+      <RaiseMaintenanceModal
+        isOpen={isRaiseMaintenanceOpen}
+        onClose={() => setIsRaiseMaintenanceOpen(false)}
+      />
+
+      {/* Global Asset Detail Drawer (invocable from search, command palette, and anywhere in the app) */}
+      {detailAsset && (
+        <AssetDetailDrawer
+          asset={detailAsset}
+          isOpen={!!detailAsset}
+          onClose={() => setDetailAsset(null)}
+        />
+      )}
     </div>
   )
 }

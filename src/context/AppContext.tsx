@@ -18,8 +18,33 @@ import {
   AuditCycle,
   AuditItem,
   AuditStatus,
-  ActivityLogItem
+  ActivityLogItem,
+  ToastMessage
 } from '../types'
+
+const STORAGE_PREFIX = 'assetflow_erp_v2_'
+
+function loadStorage<T>(key: string, defaultValue: T): T {
+  if (typeof window === 'undefined') return defaultValue
+  try {
+    const item = localStorage.getItem(`${STORAGE_PREFIX}${key}`)
+    if (item !== null) {
+      return JSON.parse(item)
+    }
+  } catch (e) {
+    console.error(`Failed to load ${key} from localStorage`, e)
+  }
+  return defaultValue
+}
+
+function saveStorage<T>(key: string, value: T): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(`${STORAGE_PREFIX}${key}`, JSON.stringify(value))
+  } catch (e) {
+    console.error(`Failed to save ${key} to localStorage`, e)
+  }
+}
 
 export const INITIAL_USERS: User[] = [
   {
@@ -1304,26 +1329,65 @@ interface AppContextType {
   // Activity audit trail methods
   activityLogs: ActivityLogItem[]
   addActivityLog: (log: Omit<ActivityLogItem, 'id' | 'timestamp' | 'relativeTime' | 'immutableHash'>) => void
+  // Asset management CRUD & DB Reset
+  updateAsset: (id: string, updates: Partial<Asset>) => void
+  deleteAsset: (id: string) => void
+  resetDatabase: () => void
+  // Toast notifications
+  toasts: ToastMessage[]
+  addToast: (message: string, type?: 'success' | 'info' | 'warning' | 'error', durationMs?: number) => void
+  removeToast: (id: string) => void
+  // Global Modals & Command Palette
+  isCommandPaletteOpen: boolean
+  setIsCommandPaletteOpen: (open: boolean) => void
+  isRegisterAssetOpen: boolean
+  setIsRegisterAssetOpen: (open: boolean) => void
+  isBookResourceOpen: boolean
+  setIsBookResourceOpen: (open: boolean) => void
+  isRaiseMaintenanceOpen: boolean
+  setIsRaiseMaintenanceOpen: (open: boolean) => void
+  detailAsset: Asset | null
+  setDetailAsset: (asset: Asset | null) => void
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined)
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [users, setUsers] = useState<User[]>(INITIAL_USERS)
-  const [currentUser, setCurrentUser] = useState<User>(INITIAL_USERS[0])
-  const [departments, setDepartments] = useState<Department[]>(INITIAL_DEPARTMENTS)
-  const [categories, setCategories] = useState<AssetCategory[]>(INITIAL_CATEGORIES)
-  const [elevationLogs, setElevationLogs] = useState<RoleElevationLog[]>(INITIAL_ELEVATION_LOGS)
-  const [assets, setAssets] = useState<Asset[]>(INITIAL_ASSETS)
-  const [tickets, setTickets] = useState<MaintenanceTicket[]>(INITIAL_TICKETS)
-  const [transfers, setTransfers] = useState<TransferRequest[]>(INITIAL_TRANSFERS)
-  const [bookings, setBookings] = useState<ResourceBooking[]>(INITIAL_BOOKINGS)
-  const [auditCycles, setAuditCycles] = useState<AuditCycle[]>(INITIAL_AUDIT_CYCLES)
-  const [activityLogs, setActivityLogs] = useState<ActivityLogItem[]>(INITIAL_ACTIVITY_LOGS)
+  const [users, setUsers] = useState<User[]>(() => loadStorage('users', INITIAL_USERS))
+  const [currentUser, setCurrentUser] = useState<User>(() => loadStorage('currentUser', INITIAL_USERS[0]))
+  const [departments, setDepartments] = useState<Department[]>(() => loadStorage('departments', INITIAL_DEPARTMENTS))
+  const [categories, setCategories] = useState<AssetCategory[]>(() => loadStorage('categories', INITIAL_CATEGORIES))
+  const [elevationLogs, setElevationLogs] = useState<RoleElevationLog[]>(() => loadStorage('elevationLogs', INITIAL_ELEVATION_LOGS))
+  const [assets, setAssets] = useState<Asset[]>(() => loadStorage('assets', INITIAL_ASSETS))
+  const [tickets, setTickets] = useState<MaintenanceTicket[]>(() => loadStorage('tickets', INITIAL_TICKETS))
+  const [transfers, setTransfers] = useState<TransferRequest[]>(() => loadStorage('transfers', INITIAL_TRANSFERS))
+  const [bookings, setBookings] = useState<ResourceBooking[]>(() => loadStorage('bookings', INITIAL_BOOKINGS))
+  const [auditCycles, setAuditCycles] = useState<AuditCycle[]>(() => loadStorage('auditCycles', INITIAL_AUDIT_CYCLES))
+  const [activityLogs, setActivityLogs] = useState<ActivityLogItem[]>(() => loadStorage('activityLogs', INITIAL_ACTIVITY_LOGS))
+  const [notifications, setNotifications] = useState<NotificationItem[]>(() => loadStorage('notifications', INITIAL_NOTIFICATIONS))
 
+  const [toasts, setToasts] = useState<ToastMessage[]>([])
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false)
+  const [isRegisterAssetOpen, setIsRegisterAssetOpen] = useState(false)
+  const [isBookResourceOpen, setIsBookResourceOpen] = useState(false)
+  const [isRaiseMaintenanceOpen, setIsRaiseMaintenanceOpen] = useState(false)
+  const [detailAsset, setDetailAsset] = useState<Asset | null>(null)
+
+  // LocalStorage state synchronizer
+  useEffect(() => { saveStorage('users', users) }, [users])
+  useEffect(() => { saveStorage('currentUser', currentUser) }, [currentUser])
+  useEffect(() => { saveStorage('departments', departments) }, [departments])
+  useEffect(() => { saveStorage('categories', categories) }, [categories])
+  useEffect(() => { saveStorage('elevationLogs', elevationLogs) }, [elevationLogs])
+  useEffect(() => { saveStorage('assets', assets) }, [assets])
+  useEffect(() => { saveStorage('tickets', tickets) }, [tickets])
+  useEffect(() => { saveStorage('transfers', transfers) }, [transfers])
+  useEffect(() => { saveStorage('bookings', bookings) }, [bookings])
+  useEffect(() => { saveStorage('auditCycles', auditCycles) }, [auditCycles])
+  useEffect(() => { saveStorage('activityLogs', activityLogs) }, [activityLogs])
+  useEffect(() => { saveStorage('notifications', notifications) }, [notifications])
   const [currentRoute, setCurrentRouteState] = useState<AppRoute>('dashboard')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS)
   const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] = useState(false)
   const [isRoleSwitcherOpen, setIsRoleSwitcherOpen] = useState(false)
   const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItem[]>([
@@ -1382,6 +1446,87 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const markAllAsRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
+  }
+
+  // --- Toast Notification Engine ---
+  const addToast = (
+    message: string,
+    type: 'success' | 'info' | 'warning' | 'error' = 'success',
+    durationMs: number = 3500
+  ) => {
+    const id = `toast-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`
+    setToasts((prev) => [...prev, { id, message, type }])
+    setTimeout(() => {
+      removeToast(id)
+    }, durationMs)
+  }
+
+  const removeToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id))
+  }
+
+  // --- Reset Database to Demo State ---
+  const resetDatabase = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        const keysToRemove = Object.keys(localStorage).filter((k) => k.startsWith(STORAGE_PREFIX))
+        keysToRemove.forEach((k) => localStorage.removeItem(k))
+      } catch (e) {
+        console.error(e)
+      }
+    }
+    setUsers(INITIAL_USERS)
+    setCurrentUser(INITIAL_USERS[0])
+    setDepartments(INITIAL_DEPARTMENTS)
+    setCategories(INITIAL_CATEGORIES)
+    setElevationLogs(INITIAL_ELEVATION_LOGS)
+    setAssets(INITIAL_ASSETS)
+    setTickets(INITIAL_TICKETS)
+    setTransfers(INITIAL_TRANSFERS)
+    setBookings(INITIAL_BOOKINGS)
+    setAuditCycles(INITIAL_AUDIT_CYCLES)
+    setActivityLogs(INITIAL_ACTIVITY_LOGS)
+    setNotifications(INITIAL_NOTIFICATIONS)
+    addToast('Database reset to clean demo state', 'info')
+  }
+
+  // --- Asset Management CRUD ---
+  const updateAsset = (id: string, updates: Partial<Asset>) => {
+    setAssets((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, ...updates } : a))
+    )
+    const target = assets.find((a) => a.id === id)
+    addActivityLog({
+      category: 'registration',
+      action: 'Asset Details Updated',
+      actorId: currentUser.id,
+      actorName: currentUser.name,
+      actorRole: currentUser.role,
+      actorAvatar: currentUser.avatar,
+      assetId: id,
+      assetTag: target?.tag,
+      assetName: updates.name || target?.name,
+      notes: `Asset attributes updated (${Object.keys(updates).join(', ')})`,
+    })
+    addToast(`Asset ${target?.tag || id} updated successfully`, 'success')
+  }
+
+  const deleteAsset = (id: string) => {
+    const target = assets.find((a) => a.id === id)
+    setAssets((prev) => prev.filter((a) => a.id !== id))
+    addActivityLog({
+      category: 'registration',
+      action: 'Asset Decommissioned / Deleted',
+      actorId: currentUser.id,
+      actorName: currentUser.name,
+      actorRole: currentUser.role,
+      actorAvatar: currentUser.avatar,
+      assetId: id,
+      assetTag: target?.tag,
+      assetName: target?.name,
+      notes: 'Asset removed from active inventory',
+    })
+    addToast(`Asset ${target?.tag || id} removed from inventory`, 'warning')
   }
 
   // --- Chronological Activity Audit Trail Engine ---
@@ -1485,6 +1630,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       notes: `${targetUser.name} elevated from ${previousRole} to ${newRole}. Reason: ${reason || 'Executive protocol'}`,
     })
 
+    addToast(`Role elevation authorized: ${targetUser.name} is now ${newRole}`, 'success')
+
     const newNotif: NotificationItem = {
       id: `notif-${Date.now()}`,
       title: 'Security: Role Elevation Applied',
@@ -1582,6 +1729,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       newState: newAsset.status,
       notes: `Commissioned under category ${newAsset.categoryName} (${newAsset.location})`,
     })
+
+    addToast(`Asset ${newAsset.tag} registered successfully!`, 'success')
 
     return newAsset
   }
@@ -1689,6 +1838,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       newState: 'Available',
       notes: notes || 'Returned to central equipment vault in Good condition',
     })
+
+    addToast(`Asset ${targetAsset?.tag || assetId} checked into vault (Available)`, 'success')
   }
 
   // --- Phase 5: Direct Allocation with Conflict Blocker ---
@@ -1785,6 +1936,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       newState: 'Allocated',
       notes: `Assigned to ${recipient.name} (${recipient.department}) until ${expectedReturnDate}`,
     })
+
+    addToast(`Asset ${targetAsset.tag} allocated to ${recipient.name}`, 'success')
 
     return { success: true }
   }
@@ -1936,6 +2089,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       newState: `Re-allocated to ${trf.toUserName}`,
       notes: `Transfer approved by ${currentUser.name} for ${trf.departmentName}`,
     })
+
+    addToast(`Transfer approved: ${trf.assetTag} assigned to ${trf.toUserName}`, 'success')
   }
 
   const rejectTransfer = (transferId: string, reason?: string) => {
@@ -1972,6 +2127,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       assetName: trf.assetName,
       notes: `Transfer declined by ${currentUser.name}.${reason ? ` Reason: ${reason}` : ''}`,
     })
+
+    addToast(`Transfer request declined for ${trf.assetTag}`, 'warning')
   }
 
   const createMaintenanceTicket = (
@@ -2027,6 +2184,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       newState: 'Under Maintenance',
       notes: `Ticket ${newTicket.ticketNumber} (${data.priority}): ${data.issueDescription}`,
     })
+
+    addToast(`Ticket ${newTicket.ticketNumber} raised for ${data.assetTag} (${data.priority} priority)`, 'info')
 
     return newTicket
   }
@@ -2119,6 +2278,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       newState: newStatus,
       notes: `Ticket ${currentTicket.ticketNumber} updated to ${newStatus}.${options?.notes ? ` Note: ${options.notes}` : ''}`,
     })
+
+    addToast(`Ticket #${currentTicket.ticketNumber} updated to "${newStatus}"`, 'info')
   }
 
   // --- Phase 7: Asset Audit Cycles Engine ---
@@ -2302,6 +2463,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       notes: `Audit cycle ${targetCycle.cycleCode} finalized with ${missingItems.length} missing and ${damagedItems.length} damaged assets.`,
     })
 
+    addToast(`Audit cycle ${targetCycle.cycleCode} finalized and locked`, 'success')
+
     return { success: true, missingCount: missingItems.length }
   }
 
@@ -2317,6 +2480,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     })
 
     if (conflictingBooking) {
+      addToast(
+        `Overlap detected: ${data.resourceName} is already reserved by ${conflictingBooking.bookedByUserName}`,
+        'error',
+        5000
+      )
       return {
         success: false,
         error: `Schedule collision detected! Resource is already reserved by ${conflictingBooking.bookedByUserName} (${conflictingBooking.startTime} - ${conflictingBooking.endTime}) on ${data.date}. Overlap blocked.`,
@@ -2356,6 +2524,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       notes: `Reserved ${data.resourceName} for ${data.date} (${data.startTime} - ${data.endTime}). Purpose: ${data.purpose}`,
     })
 
+    addToast(`Resource ${data.resourceName} reserved for ${data.date}!`, 'success')
+
     return { success: true }
   }
 
@@ -2393,6 +2563,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       newState: 'Cancelled',
       notes: `Reservation for ${bkg.resourceName} on ${bkg.date} was cancelled.`,
     })
+
+    addToast(`Reservation cancelled for ${bkg.resourceName}`, 'info')
   }
 
   const rescheduleBooking = (
@@ -2413,6 +2585,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     })
 
     if (conflictingBooking) {
+      addToast(`Collision detected: Slot reserved by ${conflictingBooking.bookedByUserName}`, 'error', 5000)
       return {
         success: false,
         error: `Reschedule blocked by temporal collision! Reserved by ${conflictingBooking.bookedByUserName} (${conflictingBooking.startTime} - ${conflictingBooking.endTime}) on ${newDate}.`,
@@ -2458,6 +2631,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       newState: 'Upcoming',
       notes: `Rescheduled ${currentBooking.resourceName} to ${newDate} (${newStartTime} - ${newEndTime}).`,
     })
+
+    addToast(`Reservation rescheduled to ${newDate} (${newStartTime} - ${newEndTime})`, 'success')
 
     return { success: true }
   }
@@ -2524,6 +2699,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         lockAndCloseAuditCycle,
         activityLogs,
         addActivityLog,
+        updateAsset,
+        deleteAsset,
+        resetDatabase,
+        toasts,
+        addToast,
+        removeToast,
+        isCommandPaletteOpen,
+        setIsCommandPaletteOpen,
+        isRegisterAssetOpen,
+        setIsRegisterAssetOpen,
+        isBookResourceOpen,
+        setIsBookResourceOpen,
+        isRaiseMaintenanceOpen,
+        setIsRaiseMaintenanceOpen,
+        detailAsset,
+        setDetailAsset,
       }}
     >
       {children}

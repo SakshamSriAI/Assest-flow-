@@ -482,6 +482,7 @@ export const AssetDirectoryScreen: React.FC = () => {
         <RaiseMaintenanceModal
           isOpen={Boolean(selectedMaintAsset)}
           onClose={() => setSelectedMaintAsset(null)}
+          targetAsset={selectedMaintAsset}
         />
       )}
     </div>

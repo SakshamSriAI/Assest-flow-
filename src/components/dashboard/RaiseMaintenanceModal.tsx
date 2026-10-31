@@ -5,19 +5,30 @@ import { Input } from '../ui/Input'
 import { useApp } from '../../context/AppContext'
 import { Wrench, AlertTriangle, UploadCloud, CheckCircle2 } from 'lucide-react'
 
+import { Asset } from '../../types'
+
 interface RaiseMaintenanceModalProps {
   isOpen: boolean
   onClose: () => void
+  targetAsset?: Asset | null
 }
 
-export const RaiseMaintenanceModal: React.FC<RaiseMaintenanceModalProps> = ({ isOpen, onClose }) => {
+export const RaiseMaintenanceModal: React.FC<RaiseMaintenanceModalProps> = ({ isOpen, onClose, targetAsset }) => {
   const { assets, currentUser, createMaintenanceTicket } = useApp()
 
-  const [selectedAssetId, setSelectedAssetId] = useState(assets[0]?.id || '')
+  const [selectedAssetId, setSelectedAssetId] = useState(targetAsset?.id || assets[0]?.id || '')
   const [priority, setPriority] = useState<'Low' | 'Medium' | 'High' | 'Critical'>('High')
   const [description, setDescription] = useState('')
   const [hasPhoto, setHasPhoto] = useState(false)
   const [successMsg, setSuccessMsg] = useState('')
+
+  React.useEffect(() => {
+    if (targetAsset) {
+      setSelectedAssetId(targetAsset.id)
+    } else if (assets.length > 0 && !selectedAssetId) {
+      setSelectedAssetId(assets[0].id)
+    }
+  }, [targetAsset, assets])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
